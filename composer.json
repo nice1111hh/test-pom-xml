@@ -16,5 +16,6 @@
         "lafourchette/adobe-campaign-client-bundle": "^2.0",
         "google/auth": "^2.0",
         "doctrine/sql-formatter": "^1.0"
-    }
+    },
+    "require-dev": {}
 }

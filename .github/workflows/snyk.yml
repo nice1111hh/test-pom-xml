@@ -1,13 +1,12 @@
-name: Example workflow using Snyk
-on: push
-jobs:
-  security:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: "ef7115f1-c1a7-4e35-82bf-faddd8121b80"
-        with:
-          command: monitor
+  - name: Snyk
+  # You may pin to the exact commit or the version.
+  # uses: snyk/actions@b98d498629f1c368650224d6d212bf7dfa89e4bf
+  uses: snyk/actions@0.4.0
+  with:
+    # Which Snyk command to run, defaults to test
+    command: # optional, default is test
+    # Additional arguments to pass to Snyk
+    args: # optional
+    # Output a snyk.json file with results if running the test command
+    json: # optional
+          

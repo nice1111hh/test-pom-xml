@@ -1,0 +1,145 @@
+plugins {
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("io.micronaut.application") version "4.3.4"
+    id("io.micronaut.aot") version "4.3.4"
+    id("pmd")
+    id("com.github.spotbugs") version "6.0.12"
+}
+
+version = "0.1"
+group = "ai.apisec"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor("io.micronaut:micronaut-http-validation")
+    annotationProcessor("io.micronaut.serde:micronaut-serde-processor")
+    annotationProcessor("io.micronaut.validation:micronaut-validation-processor")
+    implementation("io.micronaut:micronaut-management")
+    implementation("io.micronaut.serde:micronaut-serde-jackson")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.18.1")
+    implementation("io.micronaut.validation:micronaut-validation")
+    implementation("jakarta.validation:jakarta.validation-api")
+    implementation("software.amazon.awssdk:dynamodb")
+    implementation("software.amazon.awssdk:secretsmanager")
+    implementation("software.amazon.awssdk:s3")
+    implementation("software.amazon.awssdk:sts")
+    implementation("software.amazon.awssdk:sso")
+    implementation("software.amazon.awssdk:ssooidc")
+    implementation("software.amazon.awssdk:eventbridge")
+    implementation("software.amazon.awssdk:scheduler")
+    implementation("io.micronaut.jms:micronaut-jms-sqs")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.10.1")
+    implementation("io.swagger.parser.v3:swagger-parser:2.1.22")
+    implementation("commons-validator:commons-validator:1.7")
+    implementation("io.micronaut:micronaut-http-client")
+    implementation("org.commonmark:commonmark:0.22.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.22.0")
+    implementation ("org.json:json:20240303")
+    implementation ("com.github.spullara.mustache.java:compiler:0.9.11")
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+    implementation("io.micronaut:micronaut-jackson-databind")
+    implementation('org.slf4j:slf4j-api:2.0.7')
+    implementation("com.fasterxml.uuid:java-uuid-generator:5.0.0")
+    implementation("com.cronutils:cron-utils:9.2.1")
+    implementation("software.amazon.awssdk:sts")
+    compileOnly("io.micronaut:micronaut-http-client")
+    compileOnly("org.projectlombok:lombok")
+    runtimeOnly("ch.qos.logback:logback-classic")
+    runtimeOnly("org.slf4j:jul-to-slf4j:2.0.12")
+    testImplementation("com.amazonaws:aws-java-sdk-core:1.12.762")  // Localstack Test
+    testImplementation("io.micronaut:micronaut-http-client")
+    testImplementation("org.testcontainers:junit-jupiter:1.20.0")   // Localstack Test
+    testImplementation("org.hamcrest:hamcrest:3.0")
+    testImplementation("org.testcontainers:localstack:1.20.0")      // Localstack Test
+    testImplementation("org.testcontainers:testcontainers:1.20.0")  // Localstack Test
+
+    testImplementation("org.mockito:mockito-all:2.0.2-beta")
+    testImplementation("software.amazon.awssdk:secretsmanager")
+
+    implementation("com.scylladb:java-driver-core:4.18.0.1")            // Scylla Test
+    implementation("com.scylladb:java-driver-query-builder:4.18.0.1")   // Scylla Test
+    implementation("com.scylladb:java-driver-mapper-runtime:4.18.0.1")  // Scylla Test
+    implementation("io.netty:netty-transport-native-epoll:4.1.112.Final:linux-x86_64")  // Scylla Test
+    //implementation("com.codahale.metrics:metrics-core:3.0.2")         // Scylla Test
+
+    implementation("io.minio:minio:8.5.11")                             // MinIO Test
+    testImplementation("org.testcontainers:minio:1.20.1")               // MinIO Test
+
+    testImplementation("com.github.dasniko:testcontainers-keycloak:3.4.0") // KeyCloak Test
+    //testImplementation("software.amazon.awssdk:cognito")                // KeyCloak Test
+    //testImplementation("software.amazon.awssdk:cognitoidentity")        // KeyCloak Test
+    //testImplementation("software.amazon.awssdk:cognito-identitypool")   // KeyCloak Test
+    testImplementation("org.jsoup:jsoup:1.18.1")                          // KeyCloak Test
+}
+
+
+application {
+    mainClass.set("ai.apisec.applicationsservice.Application")
+}
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
+
+tasks.named("dockerfile") {
+    baseImage = "public.ecr.aws/docker/library/eclipse-temurin:17-jre-focal"
+    args = ["-Xmx3g", "-Xms3g", "-XX:+UseG1GC", "-XX:MaxGCPauseMillis=200", "-XX:+ParallelRefProcEnabled", "-XX:InitiatingHeapOccupancyPercent=45", "-XX:+AlwaysPreTouch", "-XX:+UseStringDeduplication", "-XX:+OptimizeStringConcat"]
+}
+
+pmd {
+    consoleOutput = true
+    toolVersion = "6.37.0"
+    rulesMinimumPriority = 5
+    ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml","category/java/codestyle.xml","category/java/performance.xml"]
+}
+spotbugs {
+    toolVersion = '4.8.4'
+}
+spotbugs {
+    ignoreFailures = true
+    showStackTraces = true
+    showProgress = true
+    visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+    omitVisitors = [ 'FindNonShortCircuit' ]
+    reportsDir = file("$buildDir/reports/spotbugs")
+    projectName = name
+    release = version
+    extraArgs = [ '-nested:false' ]
+    jvmArgs = [ '-Duser.language=ja' ]
+    maxHeapSize = '512m'
+}
+
+graalvmNative.toolchainDetection = false
+micronaut {
+    runtime("netty")
+    testRuntime("junit5")
+    processing {
+        incremental(true)
+        annotations("ai.apisec.*")
+    }
+    aot {
+    // Please review carefully the optimizations enabled below
+    // Check https://micronaut-projects.github.io/micronaut-aot/latest/guide/ for more details
+        optimizeServiceLoading = false
+        convertYamlToJava = false
+        precomputeOperations = true
+        cacheEnvironment = true
+        optimizeClassLoading = true
+        deduceEnvironment = true
+        optimizeNetty = true
+    }
+}
+pmdMain.enabled=false
+pmdTest.enabled=false
+spotbugsMain.enabled=false
+spotbugsTest.enabled=false
+test.enabled=false
+
+test {
+    useJUnitPlatform()
+}
